@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopHub - Everything You Need</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .cart-badge {
+            animation: bounce 0.3s ease-in-out;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            transition: transform 0.3s ease;
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        .category-btn:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s ease;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .category-active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 font-sans min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">🛍️ ShopHub</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="loginBtn" class="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md transition-colors">Login</button>
+                    <button id="registerBtn" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-md hover:from-purple-700 hover:to-pink-700 transition-all">Register</button>
+                    <button id="cartBtn" class="relative bg-white/80 p-2 rounded-full hover:bg-white shadow-md transition-all">
+                        🛒
+                        <span id="cartCount" class="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Hero Section -->
+        <div class="gradient-bg rounded-2xl text-white p-8 mb-8 shadow-xl">
+            <h2 class="text-4xl font-bold mb-4">Everything You Need, All in One Place</h2>
+            <p class="text-xl opacity-90">From tech gadgets to fresh groceries, beauty essentials to home decor</p>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="mb-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Shop by Category</h3>
+            <div class="flex flex-wrap gap-3">
+                <button onclick="filterProducts('all')" class="category-btn bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg category-active" id="category-all">
+                    🛍️ All Products
+                </button>
+                <button onclick="filterProducts('electronics')" class="category-btn bg-white text-gray-700 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl" id="category-electronics">
+                    📱 Electronics
+                </button>
+                <button onclick="filterProducts('groceries')" class="category-btn bg-white text-gray-700 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl" id="category-groceries">
+                    🥕 Groceries
+                </button>
+                <button onclick="filterProducts('home')" class="category-btn bg-white text-gray-700 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl" id="category-home">
+                    🏠 Home & Garden
+                </button>
+                <button onclick="filterProducts('beauty')" class="category-btn bg-white text-gray-700 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl" id="category-beauty">
+                    💄 Beauty
+                </button>
+                <button onclick="filterProducts('fashion')" class="category-btn bg-white text-gray-700 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl" id="category-fashion">
+                    👗 Fashion
+                </button>
+                <button onclick="filterProducts('sports')" class="category-btn bg-white text-gray-700 px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl" id="category-sports">
+                    ⚽ Sports
+                </button>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productGrid">
+            <!-- Products will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Product Detail Modal -->
+    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 id="modalTitle" class="text-2xl font-bold"></h3>
+                        <button id="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <div id="modalImage" class="w-full h-64 bg-gray-200 rounded-lg overflow-hidden">
+                                <img id="modalImageSrc" src="" alt="" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="w-full h-full flex items-center justify-center text-6xl" style="display:none;">📦</div>
+                            </div>
+                        </div>
+                        <div>
+                            <p id="modalPrice" class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4"></p>
+                            <p id="modalDescription" class="text-gray-600 mb-6"></p>
+                            <div class="flex items-center space-x-4">
+                                <input type="number" id="modalQuantity" value="1" min="1" class="w-20 px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500">
+                                <button id="modalAddToCart" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-md hover:from-purple-700 hover:to-pink-700 flex-1 font-semibold">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Modal -->
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold">Shopping Cart</h3>
+                        <button id="closeCart" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                    <div id="cartItems" class="space-y-4 mb-6">
+                        <!-- Cart items will be loaded here -->
+                    </div>
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center text-xl font-bold mb-4">
+                            <span>Total: $<span id="cartTotal">0.00</span></span>
+                        </div>
+                        <button id="checkoutBtn" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-md hover:from-green-700 hover:to-emerald-700 font-semibold shadow-lg">Proceed to Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold">Login</h3>
+                        <button id="closeLogin" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                    <form id="loginForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-md hover:from-purple-700 hover:to-pink-700 font-semibold">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold">Register</h3>
+                        <button id="closeRegister" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                    <form id="registerForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-md hover:from-purple-700 hover:to-pink-700 font-semibold">Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold">Checkout</h3>
+                        <button id="closeCheckout" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Shipping Information</h4>
+                            <form id="checkoutForm" class="space-y-4">
+                                <input type="text" placeholder="Full Name" class="w-full px-3 py-2 border rounded-md" required>
+                                <input type="text" placeholder="Address" class="w-full px-3 py-2 border rounded-md" required>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="text" placeholder="City" class="px-3 py-2 border rounded-md" required>
+                                    <input type="text" placeholder="ZIP Code" class="px-3 py-2 border rounded-md" required>
+                                </div>
+                            </form>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Order Summary</h4>
+                            <div id="checkoutItems" class="space-y-2 mb-4">
+                                <!-- Checkout items will be loaded here -->
+                            </div>
+                            <div class="border-t pt-4">
+                                <div class="flex justify-between text-xl font-bold mb-4">
+                                    <span>Total: $<span id="checkoutTotal">0.00</span></span>
+                                </div>
+                                <button id="placeOrderBtn" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-md hover:from-green-700 hover:to-emerald-700 font-semibold shadow-lg">Place Order</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full">
+                <div class="p-6 text-center">
+                    <div class="text-6xl text-green-500 mb-4">✅</div>
+                    <h3 class="text-2xl font-bold mb-4">Order Placed Successfully!</h3>
+                    <p class="text-gray-600 mb-6">Thank you for your purchase. Your order #<span id="orderNumber"></span> has been confirmed.</p>
+                    <button id="closeSuccess" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-md hover:from-purple-700 hover:to-pink-700 font-semibold">Continue Shopping</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample product data with categories and reliable images
+        const products = [
+            // Electronics
+            { 
+                id: 1, 
+                name: "iPhone 15 Pro", 
+                price: 999.99, 
+                image: "IPhone.jpeg?w=400&h=400&fit=crop&auto=format", 
+                category: "electronics", 
+                description: "The most advanced iPhone ever featuring the revolutionary A17 Pro chip with 6-core GPU, professional camera system with 5x telephoto zoom, and titanium design. Includes 128GB storage, Face ID, and all-day battery life. Perfect for photography enthusiasts and power users who demand the best mobile technology." 
+            },
+            { 
+                id: 2, 
+                name: "MacBook Air M2", 
+                price: 1199.99, 
+                image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop&auto=format", 
+                category: "electronics", 
+                description: "Supercharged by the M2 chip, this MacBook Air delivers incredible performance in an impossibly thin design. Features 13.6-inch Liquid Retina display, 8GB unified memory, 256GB SSD storage, and up to 18 hours of battery life. Ideal for students, professionals, and creatives who need portable power for demanding tasks." 
+            },
+            { 
+                id: 3, 
+                name: "AirPods Pro", 
+                price: 249.99, 
+                image: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=400&h=400&fit=crop&auto=format", 
+                category: "electronics", 
+                description: "Experience premium audio with active noise cancellation, transparency mode, and spatial audio. Features custom high-excursion Apple driver, adaptive EQ, and up to 6 hours of listening time. Includes MagSafe charging case with wireless charging capability. Perfect for commuters, fitness enthusiasts, and audiophiles." 
+            },
+            { 
+                id: 4, 
+                name: "Samsung 4K TV", 
+                price: 799.99, 
+                image: "samsung_tv.webp?w=400&h=400&fit=crop&auto=format", 
+                category: "electronics", 
+                description: "Immerse yourself in stunning 4K UHD resolution with HDR10+ support and Quantum Dot technology. This 55-inch smart TV features built-in streaming apps, voice control, and gaming mode with low input lag. Includes multiple HDMI ports, WiFi connectivity, and sleek bezel-less design perfect for any living room setup." 
+            },
+            
+            // Groceries
+            { 
+                id: 5, 
+                name: "Organic Bananas", 
+                price: 40.00, 
+                image: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=400&h=400&fit=crop&auto=format", 
+                category: "groceries", 
+                description: "Premium organic bananas sourced from sustainable farms, rich in potassium, vitamin B6, and natural fiber. Perfect ripeness for immediate consumption or smoothie preparation. Each bunch contains 6-8 bananas, pesticide-free and non-GMO certified. Great for breakfast, post-workout snacks, or baking healthy treats." 
+            },
+            { 
+                id: 6, 
+                name: "Mango - Premium Alphonso (1kg)", 
+                price: 3.00, 
+                image: "Alphonso-Mangoes-1.jpeg?w=400&h=400&fit=crop&auto=format", 
+                category: "groceries", 
+                description: "Juicy, aromatic Alphonso mangoes sourced from Ratnagiri. Naturally ripened and packed with vitamin C and antioxidants. Perfect for smoothies, desserts, or a sweet summer bite." 
+            },
+            { 
+                id: 7, 
+                name: "Avocados", 
+                price: 2.15, 
+                image: "Avacado.jpg?w=400&h=400&fit=crop&auto=format", 
+                category: "groceries", 
+                description: "Hand-picked Hass avocados at perfect ripeness, packed with healthy monounsaturated fats, fiber, and potassium. Set of 4 premium avocados ideal for guacamole, avocado toast, salads, or smoothies. Creamy texture and rich flavor make these perfect for both savory and sweet applications. Ready to eat immediately." 
+            },
+            { 
+                id: 8, 
+                name: "Carrot - Organic (500g)", 
+                price: 0.55, 
+                image: "carrot.jpeg?w=400&h=400&fit=crop&auto=format", 
+                category: "groceries", 
+                description: "Crunchy, sweet organic carrots grown without pesticides. Ideal for salads, juices, and healthy snacking. Rich in beta-carotene for better eyesight and immunity." 
+            },
+            
+            // Home & Garden
+            { 
+                id: 9, 
+                name: "Cozy Throw Pillow", 
+                price: 4.80, 
+                image: "Throw-pillow.jpg?w=400&h=400&fit=crop&auto=format", 
+                category: "home", 
+                description: "Luxurious velvet throw pillow in sage green with hidden zipper closure and premium down-alternative filling. Measures 18x18 inches, machine washable cover, and hypoallergenic materials. Perfect accent piece for sofas, beds, or reading chairs. Adds instant elegance and comfort to any living space with its soft texture and sophisticated color." 
+            },
+            { 
+                id: 10, 
+                name: "Succulent Plant", 
+                price: 6.40, 
+                image: "Succulent Plant.webp?w=400&h=400&fit=crop&auto=format", 
+                category: "home", 
+                description: "Beautiful jade succulent in handcrafted ceramic pot with drainage hole and matching saucer. Low-maintenance plant perfect for beginners, requires minimal watering and thrives in bright indirect light. Includes care instructions and plant food starter pack. Great for offices, bedrooms, or as a thoughtful housewarming gift. Pack of 6" 
+            },
+            { 
+                id: 11, 
+                name: "Scented Candle", 
+                price: 3.60, 
+                image: "Scented Candle.avif?w=400&h=400&fit=crop&auto=format", 
+                category: "home", 
+                description: "Hand-poured soy wax candle with vanilla lavender fragrance, featuring a clean cotton wick and elegant glass vessel. Burns for approximately 40 hours with consistent scent throw. Made from natural, eco-friendly ingredients without harmful chemicals. Perfect for relaxation, meditation, or creating a cozy atmosphere in any room." 
+            },
+            { 
+                id: 12, 
+                name: "Kitchen Knife Set", 
+                price: 6.7, 
+                image: "Kitchen knife set.webp?w=400&h=400&fit=crop&auto=format", 
+                category: "home", 
+                description: "Professional 6-piece German stainless steel knife set including chef's knife, paring knife, utility knife, bread knife, and kitchen shears. Features ergonomic handles, full tang construction, and razor-sharp edges. Includes wooden storage block and sharpening steel. Perfect for home cooks and culinary enthusiasts who demand precision and durability." 
+            },
+            
+            // Beauty
+            { 
+                id: 13, 
+                name: "Moisturizing Cream", 
+                price: 3.00, 
+                image: "Moisturizing Cream.jpg?w=400&h=400&fit=crop&auto=format", 
+                category: "beauty", 
+                description: "Advanced anti-aging moisturizer with hyaluronic acid, vitamin C, and peptides. Clinically proven to reduce fine lines, improve skin texture, and provide 24-hour hydration. Suitable for all skin types, non-comedogenic, and dermatologist tested. 1.7 fl oz jar with airless pump to preserve active ingredients. Perfect for daily skincare routine." 
+            },
+            { 
+                id: 14, 
+                name: "Matte Lipstick Set - Pack of 6 Shades (Mini, 2g each)", 
+                price: 3.00, 
+                image: "Matte Lipstick Set - Pack of 6 Shades (Mini, 2g each).jpeg?w=400&h=400&fit=crop&auto=format", 
+                category: "beauty", 
+                description: "Luxury matte lipstick collection featuring 5 trending shades: nude pink, classic red, berry, coral, and deep plum. Long-wearing formula with vitamin E and jojoba oil for comfortable wear. Includes mirror compact and application tips. Cruelty-free and paraben-free. Perfect for creating versatile looks from natural to glamorous." 
+            },
+            { 
+                id: 15, 
+                name: "Charcoal Peel-Off Face Mask - Deep Cleansing (100g)", 
+                price: 2.40, 
+                image: "Face Mask.jpg?w=400&h=400&fit=crop&auto=format", 
+                category: "beauty", 
+                description: "Detoxifying charcoal clay mask with bentonite clay, tea tree oil, and witch hazel. Draws out impurities, minimizes pores, and controls excess oil production. Single-use packet perfect for weekly deep cleansing treatment. Suitable for oily and combination skin types. Leaves skin feeling refreshed, smooth, and purified after just 15 minutes." 
+            },
+            { 
+                id: 16, 
+                name: "Hair Serum", 
+                price: 3.60, 
+                image: "hair serum.jpg?w=400&h=400&fit=crop&auto=format", 
+                category: "beauty", 
+                description: "Nourishing hair serum with argan oil, keratin, and silk proteins for damaged and frizzy hair. Provides heat protection up to 450°F, reduces frizz, and adds brilliant shine. Lightweight formula won't weigh hair down. 3.4 fl oz bottle with pump dispenser. Perfect for all hair types, especially color-treated and chemically processed hair." 
+            },
+            
+            // Fashion
+            { 
+                id: 17, 
+                name: "Designer Handbag", 
+                price: 21.75, 
+                image: "handbag.webp?w=400&h=400&fit=crop&auto=format", 
+                category: "fashion", 
+                description: "Elegant genuine leather handbag in cognac brown with gold-tone hardware and adjustable shoulder strap. Features multiple compartments, zippered pockets, and magnetic closure. Measures 12x10x4 inches with dust bag included. Handcrafted construction with attention to detail. Perfect for work, travel, or special occasions. Timeless design that complements any wardrobe." 
+            },
+            { 
+                id: 18, 
+                name: "Casual Sneakers", 
+                price: 15.70, 
+                image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop&auto=format", 
+                category: "fashion", 
+                description: "Classic white leather sneakers with memory foam insole and rubber outsole for all-day comfort. Features breathable mesh lining, padded collar, and durable construction. Available in sizes 6-12. Perfect for casual wear, light exercise, or everyday activities. Easy to clean and maintain. Versatile design pairs well with jeans, shorts, or casual dresses." 
+            },
+            { 
+                id: 19, 
+                name: "Summer Dress", 
+                price: 10.85, 
+                image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=400&fit=crop&auto=format", 
+                category: "fashion", 
+                description: "Flowy midi dress in vibrant floral print with flutter sleeves and elastic waist. Made from lightweight, breathable fabric perfect for warm weather. Features side pockets and lined bodice for comfort and coverage. Available in sizes XS-XL. Machine washable and wrinkle-resistant. Ideal for brunches, beach vacations, or garden parties." 
+            },
+            { 
+                id: 20, 
+                name: "Denim Jacket", 
+                price: 18.10, 
+                image: "denim jacket.jpg?w=400&h=400&fit=crop&auto=format", 
+                category: "fashion", 
+                description: "Classic blue denim jacket in medium wash with button closure and chest pockets. Made from 100% cotton denim with slight stretch for comfort. Features adjustable button cuffs and traditional styling. Available in sizes XS-XXL. Perfect layering piece for transitional weather. Pairs beautifully with dresses, t-shirts, or over hoodies for a casual-chic look." 
+            },
+            
+            // Sports
+            { 
+                id: 21, 
+                name: "Yoga Mat", 
+                price: 8.45, 
+                image: "yoga mat.jpg?w=400&h=400&fit=crop&auto=format", 
+                category: "sports", 
+                description: "Premium non-slip yoga mat made from eco-friendly TPE material, measuring 72x24 inches with 6mm thickness for optimal cushioning. Features alignment lines, moisture-resistant surface, and carrying strap. Lightweight yet durable construction perfect for hot yoga, pilates, or meditation. Easy to clean and maintain. Comes in calming purple color." 
+            },
+            { 
+                id: 22, 
+                name: "Dumbbells Set", 
+                price: 18.10, 
+                image: "dumbbell set.jpg?w=400&h=400&fit=crop&auto=format", 
+                category: "sports", 
+                description: "Adjustable dumbbell set with quick-change weight system, ranging from 5-50 lbs per dumbbell. Space-saving design replaces 15 sets of traditional weights. Features secure locking mechanism, comfortable grip handles, and compact storage tray. Perfect for home gym setup, strength training, and muscle building. Includes workout guide and exercise chart." 
+            },
+            { 
+                id: 23, 
+                name: "Running Shoes", 
+                price: 19.99, 
+                image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop&auto=format", 
+                category: "sports", 
+                description: "High-performance running shoes with responsive foam midsole and engineered mesh upper for breathability. Features heel-to-toe drop of 10mm, reflective details for low-light visibility, and durable rubber outsole with traction pattern. Available in sizes 6-13. Perfect for road running, treadmill workouts, or cross-training activities." 
+            },
+            { 
+                id: 24, 
+                name: "Water Bottle", 
+                price: 4.99, 
+                image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop&auto=format", 
+                category: "sports", 
+                description: "Insulated stainless steel water bottle with double-wall vacuum technology keeps drinks cold for 24 hours or hot for 12 hours. Features leak-proof cap, wide mouth opening for easy filling and cleaning, and powder-coated finish for grip. 32oz capacity with measurement markings. BPA-free and dishwasher safe. Perfect for gym, office, or outdoor adventures." 
+            }
+        ];
+
+        let cart = [];
+        let currentUser = null;
+        let currentCategory = 'all';
+
+        // Load products
+        function loadProducts(category = 'all') {
+            const grid = document.getElementById('productGrid');
+            const filteredProducts = category === 'all' ? products : products.filter(p => p.category === category);
+            
+            grid.innerHTML = filteredProducts.map(product => `
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden product-card cursor-pointer hover:shadow-2xl transition-all duration-300" onclick="showProductDetail(${product.id})">
+                    <div class="h-48 bg-gradient-to-br from-purple-100 to-pink-100 overflow-hidden">
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-full h-full flex items-center justify-center text-6xl" style="display:none;">📦</div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-2 text-gray-800">${product.name}</h3>
+                        <p class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">$${product.price}</p>
+                        <button onclick="event.stopPropagation(); addToCart(${product.id})" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-md hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-semibold">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter products by category
+        function filterProducts(category) {
+            currentCategory = category;
+            loadProducts(category);
+            
+            // Update active category button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('category-active');
+                btn.classList.add('bg-white', 'text-gray-700');
+                btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+            });
+            
+            const activeBtn = document.getElementById(`category-${category}`);
+            activeBtn.classList.add('category-active');
+            activeBtn.classList.remove('bg-white', 'text-gray-700');
+            activeBtn.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+        }
+
+        // Show product detail modal
+        function showProductDetail(productId) {
+            const product = products.find(p => p.id === productId);
+            document.getElementById('modalTitle').textContent = product.name;
+            document.getElementById('modalImageSrc').src = product.image;
+            document.getElementById('modalImageSrc').alt = product.name;
+            document.getElementById('modalPrice').textContent = `$${product.price}`;
+            document.getElementById('modalDescription').textContent = product.description;
+            document.getElementById('modalAddToCart').onclick = () => {
+                const quantity = parseInt(document.getElementById('modalQuantity').value);
+                addToCart(productId, quantity);
+                document.getElementById('productModal').classList.add('hidden');
+            };
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        // Add to cart
+        function addToCart(productId, quantity = 1) {
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({ ...product, quantity });
+            }
+            
+            updateCartCount();
+            document.getElementById('cartCount').classList.add('cart-badge');
+            setTimeout(() => {
+                document.getElementById('cartCount').classList.remove('cart-badge');
+            }, 300);
+        }
+
+        // Update cart count
+        function updateCartCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cartCount').textContent = count;
+        }
+
+        // Show cart
+        function showCart() {
+            const cartItems = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p class="text-gray-500 text-center py-8">Your cart is empty</p>';
+            } else {
+                cartItems.innerHTML = cart.map(item => `
+                    <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center space-x-4">
+                            <span class="text-2xl">${item.image}</span>
+                            <div>
+                                <h4 class="font-semibold">${item.name}</h4>
+                                <p class="text-gray-600">$${item.price} each</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateQuantity(${item.id}, -1)" class="bg-gray-200 px-2 py-1 rounded">-</button>
+                            <span class="px-3">${item.quantity}</span>
+                            <button onclick="updateQuantity(${item.id}, 1)" class="bg-gray-200 px-2 py-1 rounded">+</button>
+                            <button onclick="removeFromCart(${item.id})" class="text-red-500 ml-4">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('cartTotal').textContent = total.toFixed(2);
+            document.getElementById('cartModal').classList.remove('hidden');
+        }
+
+        // Update quantity
+        function updateQuantity(productId, change) {
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    showCart();
+                    updateCartCount();
+                }
+            }
+        }
+
+        // Remove from cart
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            showCart();
+            updateCartCount();
+        }
+
+        // Show checkout
+        function showCheckout() {
+            const checkoutItems = document.getElementById('checkoutItems');
+            checkoutItems.innerHTML = cart.map(item => `
+                <div class="flex justify-between">
+                    <span>${item.name} x ${item.quantity}</span>
+                    <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('checkoutTotal').textContent = total.toFixed(2);
+            document.getElementById('cartModal').classList.add('hidden');
+            document.getElementById('checkoutModal').classList.remove('hidden');
+        }
+
+        // Place order
+        function placeOrder() {
+            const orderNumber = Math.floor(Math.random() * 1000000);
+            document.getElementById('orderNumber').textContent = orderNumber;
+            document.getElementById('checkoutModal').classList.add('hidden');
+            document.getElementById('successModal').classList.remove('hidden');
+            
+            // Clear cart
+            cart = [];
+            updateCartCount();
+        }
+
+        // Handle login
+        function handleLogin(event) {
+            event.preventDefault();
+            currentUser = { name: "Demo User", email: "demo@example.com" };
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('loginBtn').textContent = "Demo User";
+            alert('Login successful! (Demo mode)');
+        }
+
+        // Handle registration
+        function handleRegister(event) {
+            event.preventDefault();
+            document.getElementById('registerModal').classList.add('hidden');
+            alert('Registration successful! (Demo mode)');
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+
+            // Modal controls
+            document.getElementById('cartBtn').onclick = showCart;
+            document.getElementById('loginBtn').onclick = () => document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('registerBtn').onclick = () => document.getElementById('registerModal').classList.remove('hidden');
+            document.getElementById('checkoutBtn').onclick = showCheckout;
+            document.getElementById('placeOrderBtn').onclick = placeOrder;
+
+            // Close modal buttons
+            document.getElementById('closeModal').onclick = () => document.getElementById('productModal').classList.add('hidden');
+            document.getElementById('closeCart').onclick = () => document.getElementById('cartModal').classList.add('hidden');
+            document.getElementById('closeLogin').onclick = () => document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('closeRegister').onclick = () => document.getElementById('registerModal').classList.add('hidden');
+            document.getElementById('closeCheckout').onclick = () => document.getElementById('checkoutModal').classList.add('hidden');
+            document.getElementById('closeSuccess').onclick = () => document.getElementById('successModal').classList.add('hidden');
+
+            // Form submissions
+            document.getElementById('loginForm').onsubmit = handleLogin;
+            document.getElementById('registerForm').onsubmit = handleRegister;
+
+            // Close modals when clicking backdrop
+            document.querySelectorAll('.modal-backdrop').forEach(modal => {
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                };
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967e78d3a1d49f4d',t:'MTc1Mzk3OTMzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
